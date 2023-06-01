@@ -1,0 +1,136 @@
+# Resampling Techniques 
+
+## The Validation Set Approach
+
+```{r}
+library(ISLR2) 
+set.seed(1)
+
+#reading the data 
+Auto <- ISLR2::Auto
+attach(Auto)
+
+#samples 196 indexes from 392
+train <- sample(392, 196)
+
+#fitting the model 
+lm.fit <- lm(mpg~horsepower, data = Auto, subset = train)
+```
+
+Above we tried to predict the mpg as a linear function of the horsepower. 
+That's why `mpg~horsepower` 
+
+```{r}
+#calculating the mean for all the observations 
+mean((mpg - predict(lm.fit, Auto))[-train]^2)
+```
+Above, we calculated the Mean Square Error, excluding the data in the training set.
+
+## Using Polynomials Functions 
+
+We can estimate the test error using polynomial functions, instead 
+
+```{r}
+lm.fit2 <- lm(mpg ~ poly(horsepower,2), data = Auto, subset = train) 
+quadratic.function.MSE <- mean((mpg - predict(lm.fit2, Auto))[-train]^2)
+
+lm.fit3 <- lm(mpg ~ poly(horsepower,3), data = Auto, subset = train) 
+cubic.function.MSE <- mean((mpg - predict(lm.fit3, Auto))[-train]^2)
+
+cbind(quadratic.function.MSE, cubic.function.MSE)
+```
+## Leave-One_Out Cross Validation 
+
+```{r}
+glm.fit <- glm(mpg ~ horsepower, data = Auto)
+coef(glm.fit)
+```
+```{r}
+lm.fit <- lm(mpg ~ horsepower, data = Auto)
+coef(lm.fit)
+```
+
+The `glm()` function, on default perfoms a linear regression as its family is Gaussian.
+
+## Cross Validation 
+
+```{r}
+library(boot)
+
+glm.fit <- glm(mpg ~ horsepower, data=Auto) 
+cv.err <- cv.glm(Auto, glm.fit)
+
+cv.err$delta
+```
+When a value for k is not specified the model is trained on the entire datase, using LOOCV.
+
+Let's fit cv LOOCV for cv of different sizes from 1 to 10. 
+
+```{r}
+cv.error <- rep(0,10) 
+for (i in 1:10){
+  glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto) 
+  cv.error[i] <- cv.glm(Auto, glm.fit)$delta[1]
+}
+
+cv.error
+```
+
+## K-fold Cross Validation 
+
+```{r}
+set.seed(17) 
+cv.error.10 <- rep(0,10) 
+
+for (i in 1:10){
+  glm.fit <- glm(mpg ~ poly(horsepower,i), data = Auto) 
+  cv.error.10[i] <- cv.glm(Auto, glm.fit, K=10)$delta[1]
+}
+
+cv.error.10
+```
+
+## The Bootstrap 
+
+As we've seen bootstrap is a resampling method used to estimated some value. Historically, it was a tool created to estimate the avriance of estimators when a closed formula wasn't available.
+
+In R, bootstrap consists of two steps:
+
+* Create a function to calculate the statistic of interest 
+* Perform the bootstrap using the `boot` library to repeateadly sample with replacement from the data. 
+
+```{r}
+portfolio.data <- ISLR2::Portfolio
+
+head(portfolio.data)
+```
+
+
+```{r}
+alpha.fn <- function(data, index){
+  X <- data$X[index] 
+  Y <- data$Y[index] 
+  alpha <- ((var(Y) - cov(X,Y)) / var(X) + var(Y) - 2*cov(X,Y))
+  
+  return(alpha)
+}
+```
+
+```{r}
+alpha.fn(portfolio.data, 1:100)
+```
+Sampling 100 indexes with replacement from 1:100 
+
+```{r}
+set.seed(7)
+alpha.fn(portfolio.data, sample(100,100,replace=T))
+```
+
+As you can see, every time we perform this fucntion we get a different value for $\alpha$. We can perform it many times and then estimate the standard deviation. 
+
+Let's use the boot library 
+
+```{r}
+boot(portfolio.data, alpha.fn, R=1000)
+```
+

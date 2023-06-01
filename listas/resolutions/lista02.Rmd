@@ -1,0 +1,316 @@
+---
+title: "Trabalho 02 - Estatística Computacional"
+author: "Heit or Carvalho Pinheiro - 11833351"
+date: "2023-05-24"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+library("tidyverse")
+library(hrbrthemes)
+library(ggplot2)
+library(nlstools)
+library(rsample)
+library(tibble)
+```
+
+## Questão 1 
+
+Vamos resolver o problema através de simulações de Monte Carlo. Para simular o comportamento do sistema, amostraremos cada possível estado, como um vetor de sete elementos, representando os estados  $N$ vezes e definido as condições em que a amostra faria o sistema funcionar 
+
+```{r}
+set.seed(42)
+
+#numero de simulações Monte-Carlo 
+R <- 10000 
+
+#vetor inicial 
+v <- c(1,2,3,4,5,6,7)
+
+#definindo as sequencias de condicoes 
+sequences <- list(
+  c(1,2,3),
+  c(1,4,5,3),
+  c(1,4,7),
+  c(6,5,3),
+  c(6,7)
+)
+
+#amostrando os valores 5000 vezes
+monte_carlo_samples <- lapply(1:R, function(x) sample(v, size = length(v), replace = FALSE))
+
+#filtrando as condicoes
+monte_carlo_samples_filtered <- monte_carlo_samples[sapply(monte_carlo_samples, function(x) any(sapply(sequences, function(seq) identical(x[1:length(seq)], seq))))]
+
+length(monte_carlo_samples_filtered)
+```
+```{r}
+prop.sucesso <- length(monte_carlo_samples_filtered)/R
+erro.MC <- prop.sucesso*(1-prop.sucesso)/(R-1)
+
+#estimativa pontual do sistema funcionar
+prop.sucesso
+
+#IC 95% com aproximacao normal da estimativa 
+IC.li <- prop.sucesso - qnorm(0.975)*erro.MC
+IC.ls <- prop.sucesso + qnorm(0.975)*erro.MC
+IC.MC <- cbind(IC.li, IC.ls)
+
+IC.MC
+```
+
+
+## Questão 2
+
+2) O Modelo de Regressão baseadomonte na curva de Ricker pode ser o seguinte 
+
+$$
+Y_i = \beta_ix_iexp(-\beta_2x_i) + \epsilon_i,~~~ i = 1,..,n
+$$
+
+```{r, echo=FALSE}
+dados <- c(
+84.30, 0.28,
+97.30, 0.74,
+10.73, 4.52,
+80.65, 0.60,
+34.49, 1.17,
+77.40, 0.31,
+52.94, 0.70,
+22.92, 3.53,
+76.30, 0.40,
+99.65, 0.08,
+92.08, 0.48,
+1.49 , 1.73,
+16.88, 3.77,
+72.23, 0.06,
+28.23, 3.03,
+55.22, 0.67,
+12.15, 4.01,
+49.12, 0.63,
+64.32, 0.21,
+40.68, 1.72,
+68.76, 0.31,
+44.34, 1.01,
+6.89 , 3.60,
+18.78, 3.95,
+68.15, 0.20
+)
+
+even_idx <- seq(1,length(dados), by=2)
+odds_idx <- seq(1, length(dados))[-even_idx]
+
+dados.df <- tibble(
+  x = dados[even_idx],
+  y = dados[odds_idx]
+)
+
+dados.df
+```
+### Visualizando os dados 
+
+```{r, warning=FALSE, echo=FALSE}
+scatter.dados <- ggplot(dados.df, aes(x=x, y=y)) + 
+  ggtitle("Scatterplot dos dados") +
+  geom_point(size=3) + 
+  theme_ipsum()
+
+scatter.dados
+```
+a)
+
+```{r, echo=FALSE}
+
+ricker.model <- function(x, beta1, beta2){
+  return(beta1 * x * exp(-beta2*x))
+}
+
+#ajustando um modelo 
+ricker.fit <- nls(y ~ ricker.model(x, beta1, beta2), data = dados.df, start = list(beta1 = 0.1, beta2 = 0.1), control = nls.control(minFactor = 1/4096), algorithm = "default")
+
+
+summary(ricker.fit)
+```
+```{r}
+summary <- summary(ricker.fit)
+summary$coefficients
+```
+
+```{r}
+#se beta1
+summary$coefficients[[1,2]]
+
+#se beta 2 
+summary$coefficients[[2,2]]
+```
+
+
+Desse modo, podemos concluir que o modelo passa a ter a seguinte fórmula
+
+$$
+\hat{y} \approx 0.96 x e^{0.08x}
+$$
+
+## Plotando os dados com o modelo ajustado 
+
+```{r, echo=FALSE}
+dados.df$prednls <- predict(ricker.fit)
+head(dados.df)
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+scatter.fitted <- ggplot(dados.df, aes(x=x, y=y)) + 
+  ggtitle("Curva ajustada aos dados") +
+  geom_point(size=3) + 
+  geom_line(aes(y = prednls), size = 1, colour = "blue") +
+  theme_ipsum()
+
+scatter.fitted
+```
+
+A partir do gráfico com o modelo ajustado aos dados, parece que o modelo, de fato, faz um bom ajuste. 
+
+Ainda sim, podemos verificar a qualidade do ajuste verificando se as suposições feitas, inicialmente são válidas. São elas:
+
+* A normalidade da distribuição dos resíduos.
+
+* A homegeneidade da variância dos resíduos (homocedasticidade). 
+
+* A independência dos resíduos. 
+
+
+### Verificando as suposições dos resíduos
+
+```{r}
+ricker.residuals <- nlsResiduals(ricker.fit)
+plot(ricker.residuals)
+```
+
+
+O gráfico superior direito que corresponde aos resíduos normalizados evidencia que ainda existe alguma variância nos resíduos, uma vez que os valores não estão uniformemente distribuídos ao redor de 0.
+
+O gráfico inferior esquerdo acima destaca a visualização dos resíduos no eixo y e o *lag 1* desses resíduos no eixo x. Desse modo, é possível verificar se existe correlação entre os resíduos. Percebemos que, sim, existe uma correlação que não foi identificada pelo modelo. 
+
+Por fim, a única suposição que parece ter sido atendida foi a suposição da normalidade dos resíduos que observa no gráfico inferior direito, acima.
+
+### b) Obtennha estimativas *bootstrap* dos erros padrões dos estimadores de $\beta_1$ e $\beta_2$ e compare com os resultados do item 2a** 
+
+Do item anterior temos que os erros padrões de $\beta_1$ e $\beta_2$ são:
+
+$$
+se(\beta_1) = 0.0623
+\\
+se(\beta_2) = 0.0033
+$$
+
+### Estimativa *bootstrap* dos erros padrão
+
+Para realizarmos a estimativa bootstrap dos erros padrão dos estimadores iremos reamostrar os dados com reposição, reajustando um modelo não-linear mínimos quadrados com o auxílio da função `nls()` e, ajustado os valores, calculamos a média dos erros padrão para cada estimador, obtendo assim uma estimativa dos erros *bootstrap*. 
+
+Vamos realizar uma estimativa a partir de 5000 amostras boostrap
+
+```{r}
+B = 1:5000
+se.beta1.boot <- c()
+se.beta2.boot <- c()
+idxs.dados <- c()
+
+#realizando a reamostragem dos dados
+set.seed(42)
+idxs.dados[B] <- replicate(tail(B, n=1),sample(1:length(dados.df$x), size = length(dados.df$x), replace = TRUE), simplify = FALSE)  
+
+for (b in B){
+  
+  #ajustando um modelo de minimos quadrados nao-linear
+  ricker.fit <- nls(y ~ ricker.model(x, beta1, beta2), data = dados.df[as.double(idxs.dados[[b]]),], start = list(beta1 = 0.1, beta2 = 0.1), control = nls.control(minFactor = 1/4096), algorithm = "default")
+  
+  #summary do modelo 
+  summary.mod <- summary(ricker.fit)
+  
+  #erro padrao beta1
+  se.beta1.boot <- summary.mod$coefficients[[1,2]]
+
+  #erro padrao beta2 
+  se.beta2.boot <- summary.mod$coefficients[[2,2]]
+}
+
+#media do erro padrao do estimador beta1
+cbind(mean(se.beta1.boot), mean(se.beta2.boot))
+
+```
+As estimativas *bootstrap* dos erros padrão de $\beta_1$ e $\beta_2$ são respectivamente:
+
+$$
+se(\beta_1^*) = 00628
+\\
+se(\beta_2^*) = 00319
+$$
+```{r, echo=FALSE}
+#comparando os erros 
+erros.betas <- tibble(
+  beta1 = c(summary$coefficients[[1,2]], mean(se.beta1.boot)),
+  beta2 = c(summary$coefficients[[2,2]], mean(se.beta2.boot))
+)
+
+erros.betas <- as.data.frame(erros.betas) 
+row.names(erros.betas) <- c("Erro padrao", "Erro padrao bootstrap") 
+
+erros.betas
+```
+
+Como podemos perceber pela tabela acima, os erros bootstrap são bem próximos dos erro obtido pelo ajuste do modelo. 
+
+#### c) Estudo de Simulação do Viés dos estimadores 
+
+Estudo de vies dos estimadores beta1 e beta2
+
+Verdadeiros valores de beta1 e beta2
+
+beta1 = 0.956 
+beta2 = 0.082 
+
+A ideia sera para cada valor da amostra, realizar N simulacoes do modelo, para cada simular computar o intervalo de confianca, e por fim computar a probabilidade do intervalo conter o verdadeiro valor do parametro considerando o espaco amostral como o espaco de todas as amostragens bootstrap.
+
+### Para $n < 25$
+
+Vamos selecionar uma amostra de tamanho $n = 10$ e realizaremos 1000 simulaçõe Bootstrap
+
+Dessa vez utilizaremos a função `bootstraps()` do R para realizar as reamostragens.
+
+```{r}
+set.seed(1234)
+#selecionando as 10 primeiras ocorrencias dos dados
+dados.df.10 <- dados.df[sample(nrow(dados.df),10),]
+#realizando 1000 amostragens bootsrap
+boots.10 <- bootstraps(dados.df.10, times = 1000)
+
+#redefinindo a funcao ricker 
+ricker.model <- function(x, beta1, beta2){
+  return(beta1 * x * exp(-beta2*x))
+}
+
+#ajustando o modelo para cada um das 1000 amostras bootstrap
+coeffs.10 <- 
+  boots.10 %>% 
+  mutate(
+    model = map(
+      splits, ~nls(y ~ ricker.model(x, beta1, beta2), start = list(beta1 = 0.3, beta2 = 0.1), algorithm = "default", data = analysis(.x))
+    ),
+    coef_info = map(model, tidy)
+  )
+
+coeffs.10 %>% 
+  unnest(coef_info)
+```
+
+### Para $n = 25$ 
+
+Para $n = 25$ usaremos a nossa amostra original
+
+```{r}
+
+```
+

@@ -1,0 +1,6 @@
+# Jupyter Notebook
+ipynb_checkpoints
+.Rproj.user
+
+#book folder 
+livros/

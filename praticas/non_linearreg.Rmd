@@ -1,0 +1,140 @@
+---
+title: "non_linear_models"
+author: "Heitor"
+date: "2023-05-25"
+output: pdf_document
+---
+
+```{r setup, include=FALS, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)
+attach(Wage)
+library(nlstools)
+```
+
+# Non-Linear Models 
+
+### Polynomials 
+
+### Ajustando um modelo não-linear aos dados 
+
+```{r}
+len <- 24
+x = runif(len)
+y = x^3 + runif(len, min = -0.1, max = 0.1)
+plot(x, y)
+s <- seq(from = 0, to = 1, length = 50)
+lines(s, s^3, lty = 2)
+
+df <- data.frame(x, y)
+m <- nls(y ~ I(x^power), data = df, start = list(power = 1), trace = T)
+summary(m)
+```
+Vamos ajustar um novo modelo 
+
+Lendo os dados 
+
+```{r}
+dados <- c(
+84.30, 0.28,
+97.30, 0.74,
+10.73, 4.52,
+80.65, 0.60,
+34.49, 1.17,
+77.40, 0.31,
+52.94, 0.70,
+22.92, 3.53,
+76.30, 0.40,
+99.65, 0.08,
+92.08, 0.48,
+1.49 , 1.73,
+16.88, 3.77,
+72.23, 0.06,
+28.23, 3.03,
+55.22, 0.67,
+12.15, 4.01,
+49.12, 0.63,
+64.32, 0.21,
+40.68, 1.72,
+68.76, 0.31,
+44.34, 1.01,
+6.89 , 3.60,
+18.78, 3.95,
+68.15, 0.20
+)
+
+even_idx <- seq(1,length(dados), by=2)
+odds_idx <- seq(1, length(dados))[-even_idx]
+
+dados.df <- tibble(
+  x = dados[even_idx],
+  y = dados[odds_idx]
+)
+
+head(dados.df)
+```
+
+
+```{r}
+ricker.model <- function(x, beta1, beta2){
+  return(beta1 * x * exp(-beta2*x))
+}
+
+#ajustando um modelo 
+ricker.fit <- nls(y ~ ricker.model(x, beta1, beta2), data = dados.df, start = list(beta1 = 0.1, beta2 = 0.1), control = nls.control(minFactor = 1/4096), algorithm = "default")
+
+
+summary(ricker.fit)
+```
+```{r}
+summary <- summary(ricker.fit)
+summary$residuals
+```
+
+
+Desse modo, podemos concluir que o modelo passa a ter a seguinte fórmula
+
+$$
+\hat{y} \approx 0.96 x e^{0.08x}
+$$
+
+## Plotando os dados com o modelo ajustado 
+
+```{r, echo=FALSE}
+dados.df$prednls <- predict(ricker.fit)
+head(dados.df)
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+scatter.fitted <- ggplot(dados.df, aes(x=x, y=y)) + 
+  ggtitle("Curva ajustada aos dados") +
+  geom_point(size=3) + 
+  geom_line(aes(y = prednls), size = 1, colour = "blue") +
+  theme_ipsum()
+
+scatter.fitted
+```
+A partir do gráfico com o modelo ajustado aos dados, parece que o modelo, de fato, faz um bom ajuste. 
+
+Ainda sim, podemos verificar a qualidade do ajuste verificando se as suposições feitas, inicialmente são válidas. São elas:
+
+* A normalidade da distribuição dos resíduos.
+
+* A homegeneidade da variância dos resíduos (homocedasticidade). 
+
+* A independência dos resíduos. 
+
+
+### Verificando as suposições dos resíduos
+
+```{r}
+ricker.residuals <- nlsResiduals(ricker.fit)
+plot(ricker.residuals)
+```
+
+O gráfico superior direito que corresponde aos resíduos normalizados evidencia que ainda existe alguma variância nos resíduos, uma vez que os valores não estão uniformemente distribuídos ao redor de 0.
+
+O gráfico inferior esquerdo acima destaca a visualização dos resíduos no eixo y e o *lag 1* desses resíduos no eixo x. Desse modo, é possível verificar se existe correlação entre os resíduos. Percebemos que, sim, existe uma correlação que não foi identificada pelo modelo. 
+
+Por fim, a única suposição que parece ter sido atendida foi a suposição da normalidade dos resíduos que observa no gráfico inferior direito, acima.
