@@ -1,0 +1,17 @@
+---
+title: "03 - acceptance-rejection_sampling"
+author: "Heitor"
+date: "2023-04-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Rejection Sampling 
+
+```{r}
+
+```
+

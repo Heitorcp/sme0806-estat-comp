@@ -1,0 +1,96 @@
+---
+title: "bootstrap_01"
+author: "Heitor"
+date: "2023-05-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bootstrap Class Exercises 
+
+```{r}
+dados <- tibble(
+  x = c(100, 58, 95, 55, 79, 95, 60, 88, 68, 94, 60, 64, 88, 57, 66, 67,
+76, 95, 85, 105, 80, 85, 82, 102, 100, 75, 40, 70, 63, 103, 95,
+80, 72, 68, 48, 70, 90, 60, 80, 96, 54, 80, 88, 70, 90, 79, 100,
+85, 108, 53, 58, 49
+),
+
+  y = c(97, 77, 74, 59, 79, 85, 78, 78, 68, 96, 74, 64, 76, 60, 78, 71,
+67, 103, 95, 78, 70, 80, 78, 102, 102, 77, 45, 60, 50, 94, 91,
+66, 63, 65, 58, 75, 105, 65, 80, 90, 58, 75, 83, 78, 85, 65, 90,
+76, 100, 65, 40, 53
+)
+
+)
+
+head(dados)
+```
+
+
+Definindo função para calcular o coeficiente de concordância 
+
+```{r}
+## Estimativa do coef. de correla¸c~ao de concord^ancia
+rc <- function(X, Y, indices = 1:length(X)) {
+n <- length(X)
+cn <- (n - 1) / n
+Xs <- X[indices]
+Ys <- Y[indices]
+Sx2 <- var(Xs) * cn
+Sy2 <- var(Ys) * cn
+Sxy <- cov(Xs, Ys) * cn
+
+return(2 * Sxy / ((mean(Xs) - mean(Ys))^2 + Sx2 + Sy2))
+}
+```
+
+```{r}
+rc(dados$x, dados$y)
+```
+
+### Bootstrap 
+
+A ideia por tras do bootstrap é nos amostrarmos a amostra completa n vezes e, com base, nas amostragens calcular a estastitica e, por fim, fazer a distribuição dessas estatísticas.
+
+```{r}
+set.seed(7714)
+B <- 5000 # Numero de amostras
+rcs <- c() # Estimativas bootstrap
+
+for (b in 1:B) {
+rcs[b] <- rc(dados$x, dados$y, sample(1:nrow(dados), nrow(dados), replace = TRUE))
+}
+```
+
+
+Amostrado os indices, faremos a distribuição dos valores das concordâncias 
+
+```{r}
+hist(rcs, freq = FALSE, main = "", xlab = expression(r[c]^"*"),
+     ylab="Densidade", col="lightyellow") 
+lines(density(rcs), col = "blue", lty=2, lwd=2) 
+box()
+```
+
+```{r}
+mean(rcs)
+sd(rcs)
+```
+### Tentando rodar a funcao vetorizada 
+
+```{r}
+B_vector <- 1:5000
+rcs_vector <- c()
+
+rcs_vector[B_vector] <- rc(dados$x, dados$y, sample(1:length(dados$x), size = length(dados$x), replace=TRUE))
+
+length(rcs_vector)
+```
+```{r}
+mean(rcs_vector)
+```
+
