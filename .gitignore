@@ -1,6 +1,7 @@
 # Jupyter Notebook
 ipynb_checkpoints
 .Rproj.user
+.RData 
 
 #book folder 
 livros/
