@@ -1,0 +1,126 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMLlW8nPRXV7h9xtJPBlPL3",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Heitorcp/sme0806-estat-comp/blob/main/sme0806-estat-comp/tree/main/listas/resolutions\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 54,
+      "metadata": {
+        "id": "FtEcpaFTtNTG"
+      },
+      "outputs": [],
+      "source": [
+        "from scipy.stats import bernoulli as bern\n",
+        "from scipy.stats import norm\n",
+        "\n",
+        "import numpy as np\n",
+        "\n",
+        "#probabilidades de cada elemento \n",
+        "\n",
+        "p1 = 0.867\n",
+        "p2 = 0.952\n",
+        "p3 = 0.986\n",
+        "p4 = 0.878\n",
+        "p5 = 0.871\n",
+        "p6 = 0.995\n",
+        "p7 = 0.903\n",
+        "\n",
+        "#probabilidade de cada caminho \n",
+        "p_c1 = p1*p2*p3 \n",
+        "p_c2 = p1*p4*p5*p3 \n",
+        "p_c3 = p1*p4*p7 \n",
+        "p_c4 = p6*p5*p3 \n",
+        "p_c5 = p6*p7\n",
+        "\n",
+        "def simulate_MC(R, confidence:float):\n",
+        "\n",
+        "  \"\"\"\n",
+        "  Simula o sistema de fluxo proposto na questão 01 através de Métodos de MOnte Carlo.\n",
+        "  A probabilidade de cada componente funcionar é uma Bernoulli(1, p). \n",
+        "  Cada iteração do sistema simula um estado. Os elementos são avaliados para os casos desejáveis e suas probabilidades guardadas em uma lista.\n",
+        "  Retorna a estimativa pontual da probabilidade de o sistema funcionar, o erro padrao do estimador e a estimativa intervalar.\n",
+        "\n",
+        "  Keyword arguments:\n",
+        "  R -- o número de simulações a serem realizadas\n",
+        "  confidence -- a confianca da estimativa intervalar\n",
+        "  \"\"\"\n",
+        "  \n",
+        "  #vetor que guarda os casos desejaveis\n",
+        "  x = 0 \n",
+        "  probs = [0. for i in range(R)]\n",
+        "\n",
+        "  for i in range(R):\n",
+        "    estado = (bern.rvs(p=p1, size=1).item(), bern.rvs(p=p2, size=1).item(), bern.rvs(p=p3, size=1).item(), bern.rvs(p=p4, size=1).item(), bern.rvs(p=p5, size=1).item(), bern.rvs(p=p6, size=1).item(), bern.rvs(p=p7, size=1).item()) \n",
+        "\n",
+        "    if estado[0] and estado[1] and estado[2]:\n",
+        "      probs[i] = p_c1 \n",
+        "    elif estado[0] and estado[3] and estado[4] and estado[2]:\n",
+        "      probs[i] = p_c2 \n",
+        "    elif estado[0] and estado[3] and estado[6]: \n",
+        "      probs[i] = p_c3 \n",
+        "    elif estado[5] and estado[4] and estado[2]:\n",
+        "      probs[i] = p_c4 \n",
+        "    elif estado[5] and estado[6]:\n",
+        "      probs[i] = p_c5 \n",
+        "\n",
+        "  #estimacao pontual  \n",
+        "  prop = sum(probs)/R \n",
+        "\n",
+        "  #erro padrao\n",
+        "  se = np.std(probs) \n",
+        "\n",
+        "  #intervalo de confianca (aproximacao Normal)\n",
+        "  ic = norm.interval(confidence, loc=prop, scale=se) \n",
+        "\n",
+        "  return {\"estimativa_pontual\":prop, \"erro_padrao\":se, \"intervalo_confianca\":ic}"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(simulate_MC(2000, 0.95))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "d9i3f9QdODmw",
+        "outputId": "964027f7-667b-4096-8548-8a029c2c84ff"
+      },
+      "execution_count": 53,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "{'estimativa_pontual': 0.8083319373972526, 'erro_padrao': 0.06830762000127381, 'intervalo_confianca': (0.6744514623251081, 0.9422124124693971)}\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
