@@ -272,44 +272,6 @@ Verdadeiros valores de beta1 e beta2
 beta1 = 0.956 
 beta2 = 0.082 
 
-A ideia sera para cada valor da amostra, realizar N simulacoes do modelo, para cada simular computar o intervalo de confianca, e por fim computar a probabilidade do intervalo conter o verdadeiro valor do parametro considerando o espaco amostral como o espaco de todas as amostragens bootstrap.
-
-### Para $n < 25$
-
-Vamos selecionar uma amostra de tamanho $n = 10$ e realizaremos 1000 simulaçõe Bootstrap
-
-Dessa vez utilizaremos a função `bootstraps()` do R para realizar as reamostragens.
-
-```{r}
-set.seed(1234)
-#selecionando as 10 primeiras ocorrencias dos dados
-dados.df.10 <- dados.df[sample(nrow(dados.df),10),]
-#realizando 1000 amostragens bootsrap
-boots.10 <- bootstraps(dados.df.10, times = 1000)
-
-#redefinindo a funcao ricker 
-ricker.model <- function(x, beta1, beta2){
-  return(beta1 * x * exp(-beta2*x))
-}
-
-#ajustando o modelo para cada um das 1000 amostras bootstrap
-coeffs.10 <- 
-  boots.10 %>% 
-  mutate(
-    model = map(
-      splits, ~nls(y ~ ricker.model(x, beta1, beta2), start = list(beta1 = 0.3, beta2 = 0.1), algorithm = "default", data = analysis(.x))
-    ),
-    coef_info = map(model, tidy)
-  )
-
-coeffs.10 %>% 
-  unnest(coef_info)
-```
-
-### Para $n = 25$ 
-
-Para $n = 25$ usaremos a nossa amostra original
-
 ```{r}
 
 ```
