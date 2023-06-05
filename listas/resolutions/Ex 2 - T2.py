@@ -40,160 +40,160 @@ print("β2:", se_beta2)
 
 
 
-### Exercicio 2.c
+# ### Exercicio 2.c
 
-#n<25
+# #n<25
 
-beta1 = 1.222225486364666
-beta2 = 0.1003063875804432
+# beta1 = 1.222225486364666
+# beta2 = 0.1003063875804432
 
-simulacoes = 1000
-n = 10
-erro_padrao = 0.1  # Desvio padrão do erro aleatório
+# simulacoes = 1000
+# n = 10
+# erro_padrao = 0.1  # Desvio padrão do erro aleatório
 
-cobertura_beta1 = 0
-cobertura_beta2 = 0
+# cobertura_beta1 = 0
+# cobertura_beta2 = 0
 
-vies_beta1 = 0
-vies_beta2 = 0
-
-
-# Simulação de Monte Carlo
-for i in range(simulacoes):
-    # Gerar amostra com erro aleatório
-    x_simulado = np.random.choice(x_list, size=n, replace=False)
-    y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
-
-    # Ajustar o modelo
-    params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
-    estimativa_beta1 = params[0]
-    estimativa_beta2 = params[1]
-
-    # Acumular o viés
-    vies_beta1 += estimativa_beta1 - beta1
-    vies_beta2 += estimativa_beta2 - beta2
-
-    #intervalo de confiança
-    std_errors = np.sqrt(np.diag(cov_matrix))
-    limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
-    limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
-    limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
-    limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
-
-    # Verificando se o parametro verdadeiro está no intervalo de confiança
-    if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
-    if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
-
-# Viés médio
-vies_beta1 /= simulacoes
-vies_beta2 /= simulacoes
-
-print("Viés médio do estimador de Beta1:", vies_beta1)
-print("Viés médio do estimador de Beta2:", vies_beta2)
-
-# Probabilidade de cobertura
-coverage_prob_beta1 = cobertura_beta1 / simulacoes
-coverage_prob_beta2 = cobertura_beta2 / simulacoes
-print("Coverage probability of Beta1:", coverage_prob_beta1)
-print("Coverage probability of Beta2:", coverage_prob_beta2)
+# vies_beta1 = 0
+# vies_beta2 = 0
 
 
-#n=25
+# # Simulação de Monte Carlo
+# for i in range(simulacoes):
+#     # Gerar amostra com erro aleatório
+#     x_simulado = np.random.choice(x_list, size=n, replace=False)
+#     y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
 
-n = 25
+#     # Ajustar o modelo
+#     params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
+#     estimativa_beta1 = params[0]
+#     estimativa_beta2 = params[1]
 
-cobertura_beta1 = 0
-cobertura_beta2 = 0
+#     # Acumular o viés
+#     vies_beta1 += estimativa_beta1 - beta1
+#     vies_beta2 += estimativa_beta2 - beta2
 
-vies_beta1 = 0
-vies_beta2 = 0
+#     #intervalo de confiança
+#     std_errors = np.sqrt(np.diag(cov_matrix))
+#     limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
+#     limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
+#     limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
+#     limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
 
+#     # Verificando se o parametro verdadeiro está no intervalo de confiança
+#     if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
+#     if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
 
-# Simulação de Monte Carlo
-for i in range(simulacoes):
-    # Gerar amostra com erro aleatório
-    x_simulado = np.random.choice(x_list, size=n, replace=False)
-    y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
+# # Viés médio
+# vies_beta1 /= simulacoes
+# vies_beta2 /= simulacoes
 
-    # Ajustar o modelo
-    params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
-    estimativa_beta1 = params[0]
-    estimativa_beta2 = params[1]
+# print("Viés médio do estimador de Beta1:", vies_beta1)
+# print("Viés médio do estimador de Beta2:", vies_beta2)
 
-    # Acumular o viés
-    vies_beta1 += estimativa_beta1 - beta1
-    vies_beta2 += estimativa_beta2 - beta2
-
-    #intervalo de confiança
-    std_errors = np.sqrt(np.diag(cov_matrix))
-    limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
-    limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
-    limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
-    limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
-
-    # Verificar se o parametro verdadeiro está no intervalo de confiança
-    if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
-    if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
-
-# Calcular o viés médio
-vies_beta1 /= simulacoes
-vies_beta2 /= simulacoes
-
-print("Viés médio do estimador de Beta1:", vies_beta1)
-print("Viés médio do estimador de Beta2:", vies_beta2)
-
-# Probabilidade de cobertura
-coverage_prob_beta1 = cobertura_beta1 / simulacoes
-coverage_prob_beta2 = cobertura_beta2 / simulacoes
-print("Coverage probability of Beta1:", coverage_prob_beta1)
-print("Coverage probability of Beta2:", coverage_prob_beta2)
-
-#n>25
-
-n = 50
-
-cobertura_beta1 = 0
-cobertura_beta2 = 0
-
-vies_beta1 = 0
-vies_beta2 = 0
+# # Probabilidade de cobertura
+# coverage_prob_beta1 = cobertura_beta1 / simulacoes
+# coverage_prob_beta2 = cobertura_beta2 / simulacoes
+# print("Coverage probability of Beta1:", coverage_prob_beta1)
+# print("Coverage probability of Beta2:", coverage_prob_beta2)
 
 
-# Simulação de Monte Carlo
-for i in range(simulacoes):
-    # Gerar amostra com erro aleatório
-    x_simulado = np.random.choice(x_list, size=n, replace=True)
-    y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
+# #n=25
 
-    # Ajustar o modelo
-    params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
-    estimativa_beta1 = params[0]
-    estimativa_beta2 = params[1]
+# n = 25
 
-    # Acumular o viés
-    vies_beta1 += estimativa_beta1 - beta1
-    vies_beta2 += estimativa_beta2 - beta2
+# cobertura_beta1 = 0
+# cobertura_beta2 = 0
 
-    #intervalo de confiança
-    std_errors = np.sqrt(np.diag(cov_matrix))
-    limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
-    limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
-    limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
-    limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
+# vies_beta1 = 0
+# vies_beta2 = 0
 
-    # Verificar se o parametro verdadeiro está no intervalo de confiança
-    if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
-    if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
 
-# Calcular o viés médio
-vies_beta1 /= simulacoes
-vies_beta2 /= simulacoes
+# # Simulação de Monte Carlo
+# for i in range(simulacoes):
+#     # Gerar amostra com erro aleatório
+#     x_simulado = np.random.choice(x_list, size=n, replace=False)
+#     y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
 
-print("Viés médio do estimador de Beta1:", vies_beta1)
-print("Viés médio do estimador de Beta2:", vies_beta2)
+#     # Ajustar o modelo
+#     params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
+#     estimativa_beta1 = params[0]
+#     estimativa_beta2 = params[1]
 
-# Probabilidade de cobertura
-coverage_prob_beta1 = cobertura_beta1 / simulacoes
-coverage_prob_beta2 = cobertura_beta2 / simulacoes
-print("Coverage probability of Beta1:", coverage_prob_beta1)
-print("Coverage probability of Beta2:", coverage_prob_beta2)
+#     # Acumular o viés
+#     vies_beta1 += estimativa_beta1 - beta1
+#     vies_beta2 += estimativa_beta2 - beta2
+
+#     #intervalo de confiança
+#     std_errors = np.sqrt(np.diag(cov_matrix))
+#     limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
+#     limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
+#     limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
+#     limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
+
+#     # Verificar se o parametro verdadeiro está no intervalo de confiança
+#     if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
+#     if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
+
+# # Calcular o viés médio
+# vies_beta1 /= simulacoes
+# vies_beta2 /= simulacoes
+
+# print("Viés médio do estimador de Beta1:", vies_beta1)
+# print("Viés médio do estimador de Beta2:", vies_beta2)
+
+# # Probabilidade de cobertura
+# coverage_prob_beta1 = cobertura_beta1 / simulacoes
+# coverage_prob_beta2 = cobertura_beta2 / simulacoes
+# print("Coverage probability of Beta1:", coverage_prob_beta1)
+# print("Coverage probability of Beta2:", coverage_prob_beta2)
+
+# #n>25
+
+# n = 50
+
+# cobertura_beta1 = 0
+# cobertura_beta2 = 0
+
+# vies_beta1 = 0
+# vies_beta2 = 0
+
+
+# # Simulação de Monte Carlo
+# for i in range(simulacoes):
+#     # Gerar amostra com erro aleatório
+#     x_simulado = np.random.choice(x_list, size=n, replace=True)
+#     y_simulado = base_func(x_simulado, beta1, beta2) + np.random.normal(0, erro_padrao, size=n)
+
+#     # Ajustar o modelo
+#     params, cov_matrix = curve_fit(base_func, x_simulado, y_simulado)
+#     estimativa_beta1 = params[0]
+#     estimativa_beta2 = params[1]
+
+#     # Acumular o viés
+#     vies_beta1 += estimativa_beta1 - beta1
+#     vies_beta2 += estimativa_beta2 - beta2
+
+#     #intervalo de confiança
+#     std_errors = np.sqrt(np.diag(cov_matrix))
+#     limite_inferior_beta1 = params[0] - 1.96 * std_errors[0]
+#     limite_superior_beta1 = params[0] + 1.96 * std_errors[0]
+#     limite_inferior_beta2 = params[1] - 1.96 * std_errors[1]
+#     limite_superior_beta2 = params[1] + 1.96 * std_errors[1]
+
+#     # Verificar se o parametro verdadeiro está no intervalo de confiança
+#     if limite_inferior_beta1 <= beta1 <= limite_superior_beta1:cobertura_beta1 += 1
+#     if limite_inferior_beta2 <= beta2 <= limite_superior_beta2:cobertura_beta2 += 1
+
+# # Calcular o viés médio
+# vies_beta1 /= simulacoes
+# vies_beta2 /= simulacoes
+
+# print("Viés médio do estimador de Beta1:", vies_beta1)
+# print("Viés médio do estimador de Beta2:", vies_beta2)
+
+# # Probabilidade de cobertura
+# coverage_prob_beta1 = cobertura_beta1 / simulacoes
+# coverage_prob_beta2 = cobertura_beta2 / simulacoes
+# print("Coverage probability of Beta1:", coverage_prob_beta1)
+# print("Coverage probability of Beta2:", coverage_prob_beta2)

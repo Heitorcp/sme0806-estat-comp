@@ -16,51 +16,6 @@ library(rsample)
 library(tibble)
 ```
 
-## Questão 1 
-
-Vamos resolver o problema através de simulações de Monte Carlo. Para simular o comportamento do sistema, amostraremos cada possível estado, como um vetor de sete elementos, representando os estados  $N$ vezes e definido as condições em que a amostra faria o sistema funcionar 
-
-```{r}
-set.seed(42)
-
-#numero de simulações Monte-Carlo 
-R <- 10000 
-
-#vetor inicial 
-v <- c(1,2,3,4,5,6,7)
-
-#definindo as sequencias de condicoes 
-sequences <- list(
-  c(1,2,3),
-  c(1,4,5,3),
-  c(1,4,7),
-  c(6,5,3),
-  c(6,7)
-)
-
-#amostrando os valores 5000 vezes
-monte_carlo_samples <- lapply(1:R, function(x) sample(v, size = length(v), replace = FALSE))
-
-#filtrando as condicoes
-monte_carlo_samples_filtered <- monte_carlo_samples[sapply(monte_carlo_samples, function(x) any(sapply(sequences, function(seq) identical(x[1:length(seq)], seq))))]
-
-length(monte_carlo_samples_filtered)
-```
-```{r}
-prop.sucesso <- length(monte_carlo_samples_filtered)/R
-erro.MC <- prop.sucesso*(1-prop.sucesso)/(R-1)
-
-#estimativa pontual do sistema funcionar
-prop.sucesso
-
-#IC 95% com aproximacao normal da estimativa 
-IC.li <- prop.sucesso - qnorm(0.975)*erro.MC
-IC.ls <- prop.sucesso + qnorm(0.975)*erro.MC
-IC.MC <- cbind(IC.li, IC.ls)
-
-IC.MC
-```
-
 
 ## Questão 2
 
@@ -246,7 +201,7 @@ As estimativas *bootstrap* dos erros padrão de $\beta_1$ e $\beta_2$ são respe
 $$
 se(\beta_1^*) = 00628
 \\
-se(\beta_2^*) = 00319
+se(\beta_2^*) = 00316
 $$
 ```{r, echo=FALSE}
 #comparando os erros 
@@ -261,18 +216,4 @@ row.names(erros.betas) <- c("Erro padrao", "Erro padrao bootstrap")
 erros.betas
 ```
 
-Como podemos perceber pela tabela acima, os erros bootstrap são bem próximos dos erro obtido pelo ajuste do modelo. 
-
-#### c) Estudo de Simulação do Viés dos estimadores 
-
-Estudo de vies dos estimadores beta1 e beta2
-
-Verdadeiros valores de beta1 e beta2
-
-beta1 = 0.956 
-beta2 = 0.082 
-
-```{r}
-
-```
-
+Como podemos perceber pela tabela acima, os erros bootstrap são bem próximos dos erro obtido pelo ajuste do modelo.
